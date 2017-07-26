@@ -1,7 +1,7 @@
 {
 	"name": "vscode-svn",
 	"displayName": "SVN",
-	"description": "SVN Source Control Provider",
+	"description": "SVN SCM Provider",
 	"version": "0.0.1",
 	"publisher": "damiencourtois",
 	"engines": {
@@ -11,16 +11,34 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.sayHello"
+		"*"
 	],
-	"main": "./out/src/extension",
+	"main": "./out/src/main",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.sayHello",
-				"title": "Hello World"
+				"command": "svn.diff",
+				"category": "Svn",
+				"title": "Diff"
+			},
+			{
+				"command": "svn.stage",
+				"category": "Svn",
+				"title": "Stage",
+				"icon": {
+					"light": "resources/icons/light/stage.svg",
+					"dark": "resources/icons/dark/stage.svg"
+				}
 			}
-		]
+		],
+		"menus": {
+			"scm/resourceState/context": [
+				{
+					"command": "svn.stage",
+					"group": "inline"
+				}
+			]
+		}
 	},
 	"scripts": {
 		"vscode:prepublish": "tsc -p ./",
@@ -32,7 +50,7 @@
 		"typescript": "^2.4.2",
 		"vscode": "^1.1.4",
 		"mocha": "^3.4.2",
-		"@types/node": "^8.0.14",
+		"@types/node": "^8.0.16",
 		"@types/mocha": "^2.2.41"
 	}
 }
