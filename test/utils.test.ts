@@ -1,7 +1,6 @@
 "use strict";
 
 import * as assert from "assert";
-import * as vscode from "vscode";
 import * as utils from "../src/utils";
 
 /**

@@ -1,24 +1,38 @@
 "use strict";
 
-import * as vscode from "vscode";
-import * as provider from "./provider";
-import * as commands from "./commands";
+import { Disposable, ExtensionContext, window, scm, workspace } from "vscode";
+import { SvnDiffProvider, SvnContentProvider, NothingContentProvider } from "./provider";
+import { Model } from "./model";
+import { Controller } from "./controller";
+import { CommandCenter } from "./commands";
+import { addDisposable, dispose } from "./disposable";
 
 /**
  * Called once on extension's activation
  */
-export function activate(context: vscode.ExtensionContext) {
-	const outputChannel = vscode.window.createOutputChannel("Svn");
-	context.subscriptions.push(outputChannel);
+export function activate(context: ExtensionContext) {
+	// our way of communicating with the user
+	const outputChannel = addDisposable(window.createOutputChannel("Svn"));
 
-	const SVNProvider = new provider.Provider(outputChannel);
-	context.subscriptions.push(SVNProvider);
+	// create our source control instance
+	const sourceControl = addDisposable(scm.createSourceControl("svn", "Svn"));
+	sourceControl.quickDiffProvider = addDisposable(new SvnDiffProvider());
 
-	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("svn", SVNProvider));
+	// create our content providers
+	addDisposable(workspace.registerTextDocumentContentProvider("svn", new SvnContentProvider()));
+	addDisposable(workspace.registerTextDocumentContentProvider("nothing", new NothingContentProvider()));
 
-	context.subscriptions.push(vscode.commands.registerCommand("svn.stage", commands.stage));
-	context.subscriptions.push(vscode.commands.registerCommand("svn.diff", commands.diff));
+	// the model
+	const model = addDisposable(new Model(outputChannel));
 
+	// the controller
+	addDisposable(new Controller(sourceControl, model, outputChannel));
+
+	// the command center
+	addDisposable(new CommandCenter(model));
+
+	// ensure all our registered disposables will be disposed of
+	context.subscriptions.push(new Disposable(() => { dispose() }));
 }
 
 /**

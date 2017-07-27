@@ -1,63 +1,21 @@
 "use strict";
 
-import * as vscode from "vscode";
-import * as model from "./model";
-import * as utils from "./utils";
+
+import { Uri, QuickDiffProvider, TextDocumentContentProvider } from "vscode";
+import * as svn from "./svn";
 
 
 /**
- * Main class of the extension. Provides everything needed by the SCM framework
- * of VSCode.
+ * vscode.QuickDiffProvider implementation
  */
-export class Provider implements vscode.QuickDiffProvider, vscode.TextDocumentContentProvider {
+export class SvnDiffProvider implements QuickDiffProvider {
 
 	/**
-	 * Output channel, used to communicate informations to the users.
+	 * Returns an Uri pointing to the unmodified version of the input Uri.
+	 * We just returns the Uri with the scheme "svn", and the registered
+	 * SvnContentProvider is used to resolve its content
 	 */
-	private _outputChannel: vscode.OutputChannel;
-
-	/**
-	 * Instance of the SourceControl.
-	 */
-	private _sourceControl: vscode.SourceControl;
-
-	/**
-	 * Changed (modified) resources.
-	 */
-	private _workingTree: vscode.SourceControlResourceGroup;
-
-	/**
-	 * Our model
-	 */
-	private _model: model.Model;
-
-	/**
-	 * Constructor.
-	 */
-	constructor(private outputChannel: vscode.OutputChannel) {
-		this._outputChannel = outputChannel;
-		this._sourceControl = vscode.scm.createSourceControl("svn", "Svn");
-		this._sourceControl.quickDiffProvider = this;
-		this._workingTree = this._sourceControl.createResourceGroup("changes", "Changes");
-		this._model = new model.Model(this._outputChannel);
-
-		this._model.on("workingTreeChanged", (modified) => {
-			this._workingTree.resourceStates = modified;
-		});
-	}
-
-	/**
-	 * 'destructor'
-	 */
-	dispose() {
-		this._sourceControl.dispose();
-		this._workingTree.dispose();
-	}
-
-	/**
-	 * Implements vscode.QuickDiffProvider
-	 */
-	provideOriginalResource(uri: vscode.Uri): vscode.Uri | undefined {
+	provideOriginalResource(uri: Uri): Uri | undefined {
 		if (uri.scheme !== "file") {
 			return;
 		}
@@ -65,15 +23,32 @@ export class Provider implements vscode.QuickDiffProvider, vscode.TextDocumentCo
 		return uri.with({ scheme: "svn" });
 	}
 
+}
+
+/**
+ * Provides content for Uri scheme "svn"
+ */
+export class SvnContentProvider implements TextDocumentContentProvider {
+
 	/**
 	 * Provides the original content of the file.
 	 */
-	async provideTextDocumentContent(uri: vscode.Uri): Promise< string > {
-		if (uri.scheme !== "svn") {
-			return;
-		}
-
-		const result = await utils.execute("svn", [ "cat", uri.fsPath ]);
-		return result.stdout;
+	async provideTextDocumentContent(uri: Uri): Promise< string > {
+		return svn.cat(uri.fsPath);
 	}
+
+}
+
+/**
+ * Provides content for Uri scheme "nothing" (always returns an empty string)
+ */
+export class NothingContentProvider implements TextDocumentContentProvider {
+
+	/**
+	 * Provides an empty string.
+	 */
+	async provideTextDocumentContent(uri: Uri): Promise< string > {
+		return "";
+	}
+
 }

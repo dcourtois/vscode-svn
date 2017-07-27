@@ -1,5 +1,6 @@
 "use strict";
 
+
 import * as vscode from "vscode";
 import * as path from "path";
 import * as events from "events";
@@ -23,7 +24,12 @@ export enum Status {
 /**
  * Current path
  */
-const _rootPath = path.join(path.dirname(__dirname), "..");
+const rootPath = path.join(path.dirname(__dirname), "..");
+
+/**
+ * Icons path
+ */
+const iconsPath = path.join(rootPath, "resources", "icons");
 
 
 /**
@@ -45,24 +51,24 @@ const StatusToIcon = [
  */
 const Icons = {
 	light: {
-		Modified: path.join(_rootPath, "resources", "icons", "light", "status-modified.svg"),
-		Added: path.join(_rootPath, "resources", "icons", "light", "status-added.svg"),
-		Deleted: path.join(_rootPath, "resources", "icons", "light", "status-deleted.svg"),
-		Renamed: path.join(_rootPath, "resources", "icons", "light", "status-renamed.svg"),
-		Copied: path.join(_rootPath, "resources", "icons", "light", "status-copied.svg"),
-		Untracked: path.join(_rootPath, "resources", "icons", "light", "status-untracked.svg"),
-		Ignored: path.join(_rootPath, "resources", "icons", "light", "status-ignored.svg"),
-		Conflict: path.join(_rootPath, "resources", "icons", "light", "status-conflict.svg"),
+		Modified:	path.join(iconsPath, "light", "status-modified.svg"),
+		Added:		path.join(iconsPath, "light", "status-added.svg"),
+		Deleted:	path.join(iconsPath, "light", "status-deleted.svg"),
+		Renamed:	path.join(iconsPath, "light", "status-renamed.svg"),
+		Copied:		path.join(iconsPath, "light", "status-copied.svg"),
+		Untracked:	path.join(iconsPath, "light", "status-untracked.svg"),
+		Ignored:	path.join(iconsPath, "light", "status-ignored.svg"),
+		Conflict:	path.join(iconsPath, "light", "status-conflict.svg"),
 	},
 	dark: {
-		Modified: path.join(_rootPath, "resources", "icons", "dark", "status-modified.svg"),
-		Added: path.join(_rootPath, "resources", "icons", "dark", "status-added.svg"),
-		Deleted: path.join(_rootPath, "resources", "icons", "dark", "status-deleted.svg"),
-		Renamed: path.join(_rootPath, "resources", "icons", "dark", "status-renamed.svg"),
-		Copied: path.join(_rootPath, "resources", "icons", "dark", "status-copied.svg"),
-		Untracked: path.join(_rootPath, "resources", "icons", "dark", "status-untracked.svg"),
-		Ignored: path.join(_rootPath, "resources", "icons", "dark", "status-ignored.svg"),
-		Conflict: path.join(_rootPath, "resources", "icons", "dark", "status-conflict.svg")
+		Modified:	path.join(iconsPath, "dark", "status-modified.svg"),
+		Added:		path.join(iconsPath, "dark", "status-added.svg"),
+		Deleted:	path.join(iconsPath, "dark", "status-deleted.svg"),
+		Renamed:	path.join(iconsPath, "dark", "status-renamed.svg"),
+		Copied:		path.join(iconsPath, "dark", "status-copied.svg"),
+		Untracked:	path.join(iconsPath, "dark", "status-untracked.svg"),
+		Ignored:	path.join(iconsPath, "dark", "status-ignored.svg"),
+		Conflict:	path.join(iconsPath, "dark", "status-conflict.svg"),
 	}
 };
 
@@ -123,6 +129,7 @@ export class Model extends events.EventEmitter implements vscode.Disposable {
 	 */
 	public dispose() {
 		this.fileSystemWatcher.dispose();
+		this.removeAllListeners();
 	}
 
 	/**
@@ -151,12 +158,15 @@ export class Model extends events.EventEmitter implements vscode.Disposable {
 							case "M":
 								this.workingTree.push(new Resource(match[9], Status.MODIFIED));
 								break;
+
 							case "A":
 								this.workingTree.push(new Resource(match[9], Status.ADDED));
 								break;
+
 							case "?":
 								this.workingTree.push(new Resource(match[9], Status.UNTRACKED));
 								break;
+
 							case "D":
 							case "!":
 								this.workingTree.push(new Resource(match[9], Status.DELETED));
@@ -187,7 +197,7 @@ export class Resource implements vscode.SourceControlResourceState {
 	 * 		Path of the file, relative to the workspace
 	 */
 	constructor(filePath: string, status: Status) {
-		this._resourceUri = vscode.Uri.file(path.join(vscode.workspace.rootPath, filePath));
+		this._resourceUri = vscode.Uri.file(path.join(vscode.workspace.rootPath || "", filePath));
 		this._status = status;
 	}
 

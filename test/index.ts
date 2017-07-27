@@ -7,8 +7,7 @@ var testRunner = require("vscode/lib/testrunner");
  */
 testRunner.configure({
 	ui: "tdd",
-	useColors: true,
-	reporter: "spec"
+	useColors: true
 });
 
 module.exports = testRunner;
