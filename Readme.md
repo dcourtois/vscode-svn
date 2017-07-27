@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/dcourtois/vscode-svn.svg?branch=master)](https://travis-ci.org/dcourtois/vscode-svn)
+
 # Introduction
 
 For the poor souls out there stuck on Svn on Linux, here is a VSCode extension that should make their life a bit
