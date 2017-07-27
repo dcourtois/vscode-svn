@@ -32,7 +32,7 @@ export async function cat(path: string): Promise< string > {
  */
 export async function version(): Promise< Version | void > {
 	const version = (await execute("svn", [ "--version" ])).stdout;
-	const match = version.match(/version (\d+)\.(\d+)\.(\d+)/g);
+	const match = version.match(/version (\d+)\.(\d+)\.(\d+)/);
 	if (match !== null) {
 		return {
 			major: parseInt(match[1]),
