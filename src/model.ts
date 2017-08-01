@@ -5,6 +5,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 import * as events from "events";
 import * as utils from "./utils";
+import * as icons from "./icons";
 
 
 /**
@@ -22,17 +23,6 @@ export enum Status {
 }
 
 /**
- * Current path
- */
-const rootPath = path.join(path.dirname(__dirname), "..");
-
-/**
- * Icons path
- */
-const iconsPath = path.join(rootPath, "resources", "icons");
-
-
-/**
  * Map Status to an icon
  */
 const StatusToIcon = [
@@ -45,32 +35,6 @@ const StatusToIcon = [
 	"Ignored",
 	"Conflict"
 ];
-
-/**
- * Icons
- */
-const Icons = {
-	light: {
-		Modified:	path.join(iconsPath, "light", "status-modified.svg"),
-		Added:		path.join(iconsPath, "light", "status-added.svg"),
-		Deleted:	path.join(iconsPath, "light", "status-deleted.svg"),
-		Renamed:	path.join(iconsPath, "light", "status-renamed.svg"),
-		Copied:		path.join(iconsPath, "light", "status-copied.svg"),
-		Untracked:	path.join(iconsPath, "light", "status-untracked.svg"),
-		Ignored:	path.join(iconsPath, "light", "status-ignored.svg"),
-		Conflict:	path.join(iconsPath, "light", "status-conflict.svg"),
-	},
-	dark: {
-		Modified:	path.join(iconsPath, "dark", "status-modified.svg"),
-		Added:		path.join(iconsPath, "dark", "status-added.svg"),
-		Deleted:	path.join(iconsPath, "dark", "status-deleted.svg"),
-		Renamed:	path.join(iconsPath, "dark", "status-renamed.svg"),
-		Copied:		path.join(iconsPath, "dark", "status-copied.svg"),
-		Untracked:	path.join(iconsPath, "dark", "status-untracked.svg"),
-		Ignored:	path.join(iconsPath, "dark", "status-ignored.svg"),
-		Conflict:	path.join(iconsPath, "dark", "status-conflict.svg"),
-	}
-};
 
 /**
  * Maintain a model of the local repository. This uses file watch and the
@@ -222,8 +186,8 @@ export class Resource implements vscode.SourceControlResourceState {
 	 */
 	public get decorations(): vscode.SourceControlResourceDecorations {
 		return {
-			light: { iconPath: Icons.light[StatusToIcon[this._status]] },
-			dark: { iconPath: Icons.dark[StatusToIcon[this._status]] },
+			light: { iconPath: icons.get(StatusToIcon[this._status], "light") },
+			dark: { iconPath: icons.get(StatusToIcon[this._status], "dark") },
 			strikeThrough: this._status === Status.DELETED
 		};
 	}
