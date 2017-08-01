@@ -4,7 +4,7 @@ import { Uri, commands, window, TextDocumentShowOptions, SourceControlResourceSt
 import { Model, Status, Resource } from "./model"
 import { existsSync } from "fs"
 import { basename } from "path"
-import { addDisposable } from "./disposable";
+import * as disposable from "./disposable";
 
 
 /**
@@ -63,7 +63,7 @@ export class CommandCenter {
 
 		// register our commands
 		for (const command of CommandCenter.commands) {
-			addDisposable(commands.registerCommand(command.id, command.method));
+			disposable.add(commands.registerCommand(command.id, command.method));
 		}
 	}
 
@@ -76,7 +76,7 @@ export class CommandCenter {
 
 	/**
 	 * Show the diff between a modified file and the non-modified one.
-	 * 
+	 *
 	 * @param resource
 	 * 		If this command is invoked from the changes resource group
 	 * 		onliner, then it's the corresponding resource. But if this
@@ -122,6 +122,26 @@ export class CommandCenter {
 	 */
 	@command("svn.stage")
 	async stage(...states: SourceControlResourceState[]): Promise< void > {
+		for (const state of states) {
+			console.log(state.resourceUri);
+		}
+	}
+
+	/**
+	 * Stage the given resources for commit.
+	 */
+	@command("svn.commit")
+	async commit(...states: SourceControlResourceState[]): Promise< void > {
+		for (const state of states) {
+			console.log(state.resourceUri);
+		}
+	}
+
+	/**
+	 * Stage the given resources for update.
+	 */
+	@command("svn.update")
+	async update(...states: SourceControlResourceState[]): Promise< void > {
 		for (const state of states) {
 			console.log(state.resourceUri);
 		}

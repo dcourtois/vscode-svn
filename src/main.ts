@@ -5,34 +5,38 @@ import { SvnDiffProvider, SvnContentProvider, NothingContentProvider } from "./p
 import { Model } from "./model";
 import { Controller } from "./controller";
 import { CommandCenter } from "./commands";
-import { addDisposable, dispose } from "./disposable";
+import * as disposable from "./disposable";
+import * as status from "./status";
 
 /**
  * Called once on extension's activation
  */
 export function activate(context: ExtensionContext) {
 	// our way of communicating with the user
-	const outputChannel = addDisposable(window.createOutputChannel("Svn"));
+	const outputChannel = disposable.add(window.createOutputChannel("Svn"));
 
 	// create our source control instance
-	const sourceControl = addDisposable(scm.createSourceControl("svn", "Svn"));
-	sourceControl.quickDiffProvider = addDisposable(new SvnDiffProvider());
+	const sourceControl = disposable.add(scm.createSourceControl("svn", "Svn"));
+	sourceControl.quickDiffProvider = disposable.add(new SvnDiffProvider());
 
 	// create our content providers
-	addDisposable(workspace.registerTextDocumentContentProvider("svn", new SvnContentProvider()));
-	addDisposable(workspace.registerTextDocumentContentProvider("nothing", new NothingContentProvider()));
+	disposable.add(workspace.registerTextDocumentContentProvider("svn", new SvnContentProvider()));
+	disposable.add(workspace.registerTextDocumentContentProvider("nothing", new NothingContentProvider()));
 
 	// the model
-	const model = addDisposable(new Model(outputChannel));
+	const model = disposable.add(new Model(outputChannel));
 
 	// the controller
-	addDisposable(new Controller(sourceControl, model, outputChannel));
+	disposable.add(new Controller(sourceControl, model, outputChannel));
 
 	// the command center
-	addDisposable(new CommandCenter(model));
+	disposable.add(new CommandCenter(model));
+
+	// status bar
+	disposable.add(new status.StatusBar(sourceControl));
 
 	// ensure all our registered disposables will be disposed of
-	context.subscriptions.push(new Disposable(() => { dispose() }));
+	context.subscriptions.push(new Disposable(() => { disposable.dispose() }));
 }
 
 /**

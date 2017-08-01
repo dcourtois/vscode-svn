@@ -23,9 +23,9 @@ suite("disposable", () => {
 
 	test("addDisposable", async () => {
 
-		const foo = disposable.addDisposable(new Disposable("foo"));
-		const bar = disposable.addDisposable(new Disposable("bar"));
-		const baz = disposable.addDisposable({ id: "baz" });
+		const foo = disposable.add(new Disposable("foo"));
+		const bar = disposable.add(new Disposable("bar"));
+		const baz = disposable.add({ id: "baz" });
 
 		// check the function correctly returns the objects
 		assert.equal(foo.id, "foo");

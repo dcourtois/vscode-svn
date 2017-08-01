@@ -13,7 +13,7 @@ const disposables: Disposable[] = [];
  * If the input object is a disposable, register it.
  * Returns the input object without modifying it.
  */
-export function addDisposable(disposable: any): any {
+export function add(disposable: any): any {
 	if (disposable.dispose) {
 		disposables.push(disposable);
 	}

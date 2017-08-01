@@ -1,7 +1,13 @@
 "use strict";
 
 
-import { execute } from "./utils";
+import * as utils from "./utils";
+import * as vscode from "vscode";
+
+/**
+ * Current root path
+ */
+const rootPath: string = vscode.workspace.rootPath || ".";
 
 /**
  * Version
@@ -18,20 +24,21 @@ export interface Version {
 export interface Info {
 	url: string;
 	root: string;
+	branch: string;
 }
 
 /**
  * Get the unmodified version of the given file
  */
 export async function cat(path: string): Promise< string > {
-	return (await execute("svn", [ "cat", path ])).stdout;
+	return (await utils.execute("svn", [ "cat", path ], { cwd: rootPath })).stdout;
 }
 
 /**
  * Get Svn's version
  */
 export async function version(): Promise< Version | void > {
-	const version = (await execute("svn", [ "--version" ])).stdout;
+	const version = (await utils.execute("svn", [ "--version" ])).stdout;
 	const match = version.match(/version (\d+)\.(\d+)\.(\d+)/);
 	if (match !== null) {
 		return {
@@ -46,13 +53,18 @@ export async function version(): Promise< Version | void > {
  * Get Svn's info
  */
 export async function info(): Promise< Info | void > {
-	const info = (await execute("svn", [ "info" ])).stdout;
-	const url = info.match(/^URL: (.+)$/gm);
-	const root = info.match(/^Repository Root: (.+)$/gm);
+	const info = (await utils.execute("svn", [ "info" ], { cwd: rootPath })).stdout;
+	const url = info.match(/^URL: (.+)$/m);
+	const root = info.match(/^Repository Root: (.+)$/m);
 	if (url && root) {
+		let branch = url[1].replace(root[1], "");
+		if (branch.startsWith("/") === true) {
+			branch = branch.substring(1);
+		}
 		return {
 			url: url[1],
-			root: root[1]
+			root: root[1],
+			branch: branch
 		};
 	}
 }
