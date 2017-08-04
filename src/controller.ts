@@ -25,10 +25,10 @@ export class Controller implements Disposable {
 	 */
 	constructor(private sourceControl: SourceControl, private model: Model, private outputChannel: OutputChannel) {
 		// create our resource groups
-		this.workingTree = this.sourceControl.createResourceGroup("1_changes", "Changes");
-		this.workingTree.hideWhenEmpty = true;
-		this.stagingTree = this.sourceControl.createResourceGroup("0_staged", "Staged Changes");
+		this.stagingTree = this.sourceControl.createResourceGroup("staged", "Staged Changes");
 		this.stagingTree.hideWhenEmpty = true;
+		this.workingTree = this.sourceControl.createResourceGroup("changes", "Changes");
+		this.workingTree.hideWhenEmpty = true;
 
 		// bind the model changes
 		this.model.on("workingTreeChanged", (modified) => { this.workingTree.resourceStates = modified; });

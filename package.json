@@ -67,17 +67,17 @@
 			"scm/resourceState/context": [
 				{
 					"command": "svn.stage",
-					"when": "scmProvider == svn && scmResourceGroup == 1_changes",
+					"when": "scmProvider == svn && scmResourceGroup == changes",
 					"group": "inline"
 				},
 				{
 					"command": "svn.revert",
-					"when": "scmProvider == svn && scmResourceGroup == 1_changes",
+					"when": "scmProvider == svn && scmResourceGroup == changes",
 					"group": "inline"
 				},
 				{
 					"command": "svn.unstage",
-					"when": "scmResourceGroup == 0_staged",
+					"when": "scmProvider == svn && scmResourceGroup == staged",
 					"group": "inline"
 				}
 			]
