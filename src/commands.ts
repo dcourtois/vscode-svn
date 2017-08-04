@@ -1,9 +1,10 @@
 "use strict";
 
-import { Uri, commands, window, TextDocumentShowOptions, SourceControlResourceState } from "vscode"
-import { Model, Status, Resource } from "./model"
-import { existsSync } from "fs"
-import { basename } from "path"
+import * as vscode from "vscode"
+import * as fs from "fs"
+import * as path from "path"
+import * as model from "./model"
+import * as svn from "./svn"
 import * as disposable from "./disposable";
 
 
@@ -48,7 +49,7 @@ export class CommandCenter {
 	/**
 	 * Model
 	 */
-	private model: Model;
+	private model: model.Model;
 
 	/**
 	 * registered commands
@@ -58,12 +59,12 @@ export class CommandCenter {
 	/**
 	 * Constructor
 	 */
-	constructor(model: Model) {
+	constructor(model: model.Model) {
 		this.model = model;
 
 		// register our commands
 		for (const command of CommandCenter.commands) {
-			disposable.add(commands.registerCommand(command.id, command.method));
+			disposable.add(vscode.commands.registerCommand(command.id, command.method.bind(this)));
 		}
 	}
 
@@ -83,12 +84,12 @@ export class CommandCenter {
 	 * 		command is opened from the editor, it's undefined.
 	 */
 	@command("svn.diff")
-	async diff(resource: Resource) {
+	async diff(resource: model.Resource) {
 		// get the modified uri (the current one)
-		let modified: Uri | undefined = undefined;
+		let modified: vscode.Uri | undefined = undefined;
 		if (resource === undefined) {
-			if (window.activeTextEditor) {
-				modified = window.activeTextEditor.document.uri;
+			if (vscode.window.activeTextEditor) {
+				modified = vscode.window.activeTextEditor.document.uri;
 			}
 		} else {
 			modified = resource.resourceUri;
@@ -103,16 +104,16 @@ export class CommandCenter {
 		const original = modified.with({ scheme: "svn" });
 
 		// if the resource was deleted, use an empty file for the diff
-		if (resource !== undefined && resource.status === Status.DELETED) {
+		if (resource !== undefined && resource.status === model.Status.DELETED) {
 			modified = modified.with({ scheme: "nothing" });
 		}
 
 		// open the VSCode diff viewer
-		return await commands.executeCommand< void >(
+		return await vscode.commands.executeCommand< void >(
 			"vscode.diff",
 			original,
 			modified,
-			`Diff - ${basename(modified.fsPath)}`,
+			`Diff - ${path.basename(modified.fsPath)}`,
 			{ preview: true }
 		);
 	}
@@ -121,30 +122,51 @@ export class CommandCenter {
 	 * Stage the given resources for commit.
 	 */
 	@command("svn.stage")
-	async stage(...states: SourceControlResourceState[]): Promise< void > {
-		for (const state of states) {
-			console.log(state.resourceUri);
-		}
+	async stage(...states: vscode.SourceControlResourceState[]): Promise< void > {
+		this.model.stage(states);
 	}
 
 	/**
-	 * Stage the given resources for commit.
+	 * Unstage the given resources.
+	 */
+	@command("svn.unstage")
+	async unstage(...states: vscode.SourceControlResourceState[]): Promise< void > {
+		this.model.unstage(states);
+	}
+
+	/**
+	 * Commit staged files.
 	 */
 	@command("svn.commit")
-	async commit(...states: SourceControlResourceState[]): Promise< void > {
+	async commit(...states: vscode.SourceControlResourceState[]): Promise< void > {
 		for (const state of states) {
 			console.log(state.resourceUri);
 		}
 	}
 
 	/**
-	 * Stage the given resources for update.
+	 * Update the repository.
 	 */
 	@command("svn.update")
-	async update(...states: SourceControlResourceState[]): Promise< void > {
+	async update(...states: vscode.SourceControlResourceState[]): Promise< void > {
 		for (const state of states) {
 			console.log(state.resourceUri);
 		}
+	}
+
+	/**
+	 * Revert the given resources.
+	 */
+	@command("svn.revert")
+	async revert(...states: vscode.SourceControlResourceState[]): Promise< void > {
+		// build the command line arguments
+		const args: string[] = [];
+		for (const state of states) {
+			args.push(state.resourceUri.fsPath);
+		}
+
+		// revert
+		svn.revert(args);
 	}
 
 }

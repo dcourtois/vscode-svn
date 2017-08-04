@@ -35,6 +35,24 @@
 				}
 			},
 			{
+				"command": "svn.unstage",
+				"category": "Svn",
+				"title": "Unstage",
+				"icon": {
+					"light": "resources/icons/light/unstage.svg",
+					"dark": "resources/icons/dark/unstage.svg"
+				}
+			},
+			{
+				"command": "svn.revert",
+				"category": "Svn",
+				"title": "Revert",
+				"icon": {
+					"light": "resources/icons/light/clean.svg",
+					"dark": "resources/icons/dark/clean.svg"
+				}
+			},
+			{
 				"command": "svn.commit",
 				"category": "Svn",
 				"title": "Commit"
@@ -49,6 +67,17 @@
 			"scm/resourceState/context": [
 				{
 					"command": "svn.stage",
+					"when": "scmProvider == svn && scmResourceGroup == 1_changes",
+					"group": "inline"
+				},
+				{
+					"command": "svn.revert",
+					"when": "scmProvider == svn && scmResourceGroup == 1_changes",
+					"group": "inline"
+				},
+				{
+					"command": "svn.unstage",
+					"when": "scmResourceGroup == 0_staged",
 					"group": "inline"
 				}
 			]

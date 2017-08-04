@@ -7,6 +7,10 @@ import * as events from "events";
 import * as utils from "./utils";
 import * as icons from "./icons";
 
+/**
+ * Shortcut to the root path
+ */
+const rootPath: string = vscode.workspace.rootPath || "";
 
 /**
  * File status
@@ -64,9 +68,16 @@ export class Model extends events.EventEmitter implements vscode.Disposable {
 	private static statusRegex = /( |A|C|D|I|M|R|X|\?|!|~)( |C|M)( |L)( |\+)( |S|X)( |K)( |K|O|T|B)( |C)(.+)/;
 
 	/**
-	 * The working tree
+	 * The working group. This contains the list of files on the local file
+	 * system that differ from the current repository version. Files modified,
+	 * added, removed, etc.
 	 */
 	public workingTree: Resource[] = [];
+
+	/**
+	 * The staging tree. Contains files that are marked for commiting.
+	 */
+	public stagingTree: Resource[] = [];
 
 	/**
 	 * Constructor
@@ -147,6 +158,52 @@ export class Model extends events.EventEmitter implements vscode.Disposable {
 			}
 		);
 	}
+
+	/**
+	 * Stage the given resources for commit
+	 */
+	public async stage(states: vscode.SourceControlResourceState[]) {
+		// remove resources from the working tree and add to the staging tree
+		this.workingTree = this.workingTree.filter((value) => {
+			for (const state of states) {
+				if (state.resourceUri.toString() === value.resourceUri.toString()) {
+					// add to the staging tree
+					this.stagingTree.push(new Resource(state.resourceUri, value.status));
+
+					// and filter out
+					return false;
+				}
+			}
+			return true;
+		});
+
+		// notify
+		this.emit("workingTreeChanged", this.workingTree);
+		this.emit("stagingTreeChanged", this.stagingTree);
+	}
+
+	/**
+	 * Unstage the given resources
+	 */
+	public async unstage(states: vscode.SourceControlResourceState[]) {
+		// remove resources from the staging tree and add back to the working tree
+		this.stagingTree = this.stagingTree.filter((value) => {
+			for (const state of states) {
+				if (state.resourceUri.toString() === value.resourceUri.toString()) {
+					// add to the staging tree
+					this.workingTree.push(new Resource(state.resourceUri, value.status));
+
+					// and filter out
+					return false;
+				}
+			}
+			return true;
+		});
+
+		// notify
+		this.emit("workingTreeChanged", this.workingTree);
+		this.emit("stagingTreeChanged", this.stagingTree);
+	}
 }
 
 /**
@@ -157,38 +214,39 @@ export class Resource implements vscode.SourceControlResourceState {
 	/**
 	 * Construct a Resource instance
 	 *
-	 * @param filePath
-	 * 		Path of the file, relative to the workspace
+	 * @param uri
+	 * 		Path of the file, relative to the workspace, or an Uri
+	 *
+	 * @param status
+	 * 		Status of the resource
 	 */
-	constructor(filePath: string, status: Status) {
-		this._resourceUri = vscode.Uri.file(path.join(vscode.workspace.rootPath || "", filePath));
-		this._status = status;
+	constructor(uri: string | vscode.Uri, status: Status) {
+		if (typeof uri === "string") {
+			this.resourceUri = vscode.Uri.file(path.join(rootPath, uri));
+		} else {
+			this.resourceUri = uri;
+		}
+		this.status = status;
 	}
 
 	/**
 	 * The Uri to this resource (its full path)
 	 */
-	private _resourceUri: vscode.Uri;
-	public get resourceUri(): vscode.Uri {
-		return this._resourceUri;
-	}
+	public resourceUri: vscode.Uri;
 
 	/**
 	 * The status of this resource
 	 */
-	private _status: Status;
-	public get status(): Status {
-		return this._status;
-	}
+	public status: Status;
 
 	/**
 	 * The decorations
 	 */
 	public get decorations(): vscode.SourceControlResourceDecorations {
 		return {
-			light: { iconPath: icons.get(StatusToIcon[this._status], "light") },
-			dark: { iconPath: icons.get(StatusToIcon[this._status], "dark") },
-			strikeThrough: this._status === Status.DELETED
+			light: { iconPath: icons.get(StatusToIcon[this.status], "light") },
+			dark: { iconPath: icons.get(StatusToIcon[this.status], "dark") },
+			strikeThrough: this.status === Status.DELETED
 		};
 	}
 
