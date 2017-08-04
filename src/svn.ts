@@ -28,6 +28,14 @@ export interface Info {
 }
 
 /**
+ * Check if the given file is source controlled
+ */
+export async function isControlled(path: string): Promise< boolean > {
+	const result = (await utils.execute("svn", [ "status", path ], { cwd: rootPath })).stdout;
+	return result.length > 0 ? result.charAt(0) === "?" : false;
+}
+
+/**
  * Get the unmodified version of the given file
  */
 export async function cat(path: string): Promise< string > {
@@ -67,4 +75,14 @@ export async function info(): Promise< Info | void > {
 			branch: branch
 		};
 	}
+}
+
+/**
+ * Revert things.
+ *
+ * @param files
+ * 		List of path to revert. If undefined, will revert the whole repository.
+ */
+export async function revert(files: string[] | undefined) {
+	utils.execute("svn", [ "revert" ].concat(files || []), { cwd: rootPath });
 }
