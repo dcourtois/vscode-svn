@@ -129,6 +129,13 @@ export class Model extends events.EventEmitter implements vscode.Disposable {
 				for (const line of lines) {
 					const match = line.match(Model.statusRegex);
 					if (match) {
+						// first, check if the file is staged. For the moment, we won't support having the
+						// same file staged and modified at the same time
+						if (this.isStaged(match[9]) === true) {
+							continue;
+						}
+
+						// add the file to the working tree
 						switch (match[1]) {
 							case "M":
 								this.workingTree.push(new Resource(match[9], Status.MODIFIED));
@@ -157,6 +164,18 @@ export class Model extends events.EventEmitter implements vscode.Disposable {
 				this.outputChannel.append(result.error);
 			}
 		);
+	}
+
+	/**
+	 * Checks if the given file is staged
+	 */
+	public isStaged(file) {
+		for (let item of this.stagingTree) {
+			if (item.resourceUri.path === path.join(rootPath, file)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
