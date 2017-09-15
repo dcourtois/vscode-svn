@@ -19,6 +19,16 @@
 	],
 	"main": "./out/src/main",
 	"contributes": {
+		"configuration": {
+			"title": "SVN Configuration",
+			"properties": {
+				"svn.executable": {
+					"type": "string",
+					"title": "SVN executable. Can be an absolute path.",
+					"default": "svn"
+				}
+			}
+		},
 		"commands": [
 			{
 				"command": "svn.diff",

@@ -2,6 +2,7 @@
 
 
 import * as utils from "./utils";
+import * as config from "./config";
 import * as vscode from "vscode";
 
 /**
@@ -28,10 +29,17 @@ export interface Info {
 }
 
 /**
+ * Get the svn executable
+ */
+function getSVNExe(): string {
+	return config.get("executable", "svn");
+}
+
+/**
  * Check if the given file is source controlled
  */
 export async function isControlled(path: string): Promise< boolean > {
-	const result = (await utils.execute("svn", [ "status", path ], { cwd: rootPath })).stdout;
+	const result = (await utils.execute(getSVNExe(), [ "status", path ], { cwd: rootPath })).stdout;
 	return result.length > 0 ? result.charAt(0) === "?" : false;
 }
 
@@ -39,14 +47,14 @@ export async function isControlled(path: string): Promise< boolean > {
  * Get the unmodified version of the given file
  */
 export async function cat(path: string): Promise< string > {
-	return (await utils.execute("svn", [ "cat", path ], { cwd: rootPath })).stdout;
+	return (await utils.execute(getSVNExe(), [ "cat", path ], { cwd: rootPath })).stdout;
 }
 
 /**
  * Get Svn's version
  */
 export async function version(): Promise< Version | void > {
-	const version = (await utils.execute("svn", [ "--version" ])).stdout;
+	const version = (await utils.execute(getSVNExe(), [ "--version" ])).stdout;
 	const match = version.match(/version (\d+)\.(\d+)\.(\d+)/);
 	if (match !== null) {
 		return {
@@ -61,7 +69,7 @@ export async function version(): Promise< Version | void > {
  * Get Svn's info
  */
 export async function info(): Promise< Info | void > {
-	const info = (await utils.execute("svn", [ "info" ], { cwd: rootPath })).stdout;
+	const info = (await utils.execute(getSVNExe(), [ "info" ], { cwd: rootPath })).stdout;
 	const url = info.match(/^URL: (.+)$/m);
 	const root = info.match(/^Repository Root: (.+)$/m);
 	if (url && root) {
@@ -84,5 +92,5 @@ export async function info(): Promise< Info | void > {
  * 		List of path to revert. If undefined, will revert the whole repository.
  */
 export async function revert(files: string[] | undefined) {
-	utils.execute("svn", [ "revert" ].concat(files || []), { cwd: rootPath });
+	utils.execute(getSVNExe(), [ "revert" ].concat(files || []), { cwd: rootPath });
 }
