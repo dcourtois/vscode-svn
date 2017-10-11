@@ -36,10 +36,16 @@ export class Result {
  * @returns
  * 	Promise< Result >
  */
-export async function execute(program: string, args?: string[], options?: {}): Promise< Result > {
+export async function execute(program: string, args?: string[], options: any = {}): Promise< Result > {
 	return new Promise< Result >((resolve) => {
 		// data
 		var result = new Result();
+
+		// Setting the language to english, otherwise the output is localised and doesnt't work with the regex's anymore
+		options.env = {
+			...options.env,
+			LANG: 'en_US.UTF-8'
+		}
 
 		// spawn our process
 		const process = spawn(program, args, options);
